@@ -1,0 +1,8 @@
+fuxictr==2.2.2
+keras_preprocessing
+PyYAML
+pandas
+scikit-learn
+numpy
+h5py
+tqdm

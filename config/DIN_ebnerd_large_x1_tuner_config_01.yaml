@@ -1,0 +1,95 @@
+base_config: ./config/base_config/
+base_expid: DIN_default
+dataset_id: ebnerd_large_x1
+
+dataset_config:
+    ebnerd_large_x1:
+        data_root: ./data/
+        data_format: csv
+        train_data: ./data/Ebnerd_large_x1/train.csv
+        valid_data: ./data/Ebnerd_large_x1/valid.csv
+        test_data: ./data//Ebnerd_large_x1/test.csv
+        min_categr_count: 10
+        data_block_size: 100000
+        streaming: True
+        feature_cols:
+            - {name: impression_id, active: True, dtype: int, type: meta, remap: False}
+            - {name: user_id, active: True, dtype: str, type: categorical}
+            - {name: article_id, active: True, dtype: str, type: categorical}
+            - {name: trigger_id, active: True, dtype: str, type: categorical}
+            - {name: device_type, active: True, dtype: str, type: categorical}
+            - {name: is_sso_user, active: True, dtype: str, type: categorical}
+            - {name: gender, active: True, dtype: str, type: categorical}
+            - {name: postcode, active: True, dtype: str, type: categorical}
+            - {name: age, active: True, dtype: str, type: categorical}
+            - {name: is_subscriber, active: True, dtype: str, type: categorical}
+            - {name: premium, active: True, dtype: str, type: categorical}
+            - {name: article_type, active: True, dtype: str, type: categorical}
+            - {name: ner_clusters, active: True, dtype: str, type: sequence, splitter: ^, max_len: 5, padding: pre}
+            - {name: topics, active: True, dtype: str, type: sequence, splitter: ^, max_len: 5, padding: pre}
+            - {name: category, active: True, dtype: str, type: categorical}
+            - {name: subcategory, active: True, dtype: str, type: sequence, splitter: ^, max_len: 5, padding: pre}
+            - {name: total_inviews, active: False, dtype: float, type: numeric, fill_na: 0}
+            - {name: total_pageviews, active: False, dtype: float, type: numeric, fill_na: 0}
+            - {name: total_read_time, active: False, dtype: float, type: numeric, fill_na: 0}
+            - {name: sentiment_score, active: False, dtype: float, type: numeric, fill_na: 0}
+            - {name: sentiment_label, active: True, dtype: str, type: categorical}
+            - {name: subcat1, active: True, dtype: str, type: categorical}
+            - {name: hist_id, active: True, dtype: str, type: sequence, splitter: ^, max_len: 50, padding: pre, share_embedding: article_id}
+            - {name: hist_cat, active: True, dtype: str, type: sequence, splitter: ^, max_len: 50, padding: pre, share_embedding: category}
+            - {name: hist_subcat1, active: True, dtype: str, type: sequence, splitter: ^, max_len: 50, padding: pre, share_embedding: subcat1}
+            - {name: hist_sentiment, active: True, dtype: str, type: sequence, splitter: ^, max_len: 50, padding: pre, share_embedding: sentiment_label}
+            - {name: hist_type, active: True, dtype: str, type: sequence, splitter: ^, max_len: 50, padding: pre, share_embedding: article_type}
+            - {name: publish_days, active: True, dtype: str, type: categorical}
+            - {name: publish_hours, active: True, dtype: str, type: categorical}
+            - {name: impression_hour, active: True, dtype: str, type: categorical}
+            - {name: impression_weekday, active: True, dtype: str, type: categorical}
+            - {name: pulish_3day, active: True, dtype: str, type: categorical}
+            - {name: pulish_7day, active: True, dtype: str, type: categorical}
+            - {name: article_id_img, active: True, dtype: str, type: categorical, freeze_emb: True,
+               preprocess: "copy_from(article_id)", pretrain_dim: 64, pretrained_emb: "./data/Ebnerd_large_x1/image_emb_dim64.npz", 
+               pretrain_usage: "init", min_categr_count: 1}
+            - {name: article_id_text, active: True, dtype: str, type: categorical, freeze_emb: True,
+               preprocess: "copy_from(article_id)", pretrain_dim: 64, pretrained_emb: "./data/Ebnerd_large_x1/contrast_emb_dim64.npz", 
+               pretrain_usage: "init", min_categr_count: 1}
+            - {name: hist_id_img, active: True, dtype: str, type: sequence, splitter: ^, max_len: 50, padding: pre, freeze_emb: True,
+               preprocess: "copy_from(hist_id)", pretrain_dim: 64, pretrained_emb: "./data/Ebnerd_large_x1/image_emb_dim64.npz", 
+               pretrain_usage: "init", min_categr_count: 1, share_embedding: article_id_img}
+            - {name: hist_id_text, active: True, dtype: str, type: sequence, splitter: ^, max_len: 50, padding: pre, freeze_emb: True,
+               preprocess: "copy_from(hist_id)", pretrain_dim: 64, pretrained_emb: "./data/Ebnerd_large_x1/contrast_emb_dim64.npz", 
+               pretrain_usage: "init", min_categr_count: 1, share_embedding: article_id_text}     
+        label_col: {name: click, dtype: float}
+
+
+tuner_space:
+    model_root: './checkpoints/'
+    feature_specs: [[
+            {name: hist_id, feature_encoder: null},
+            {name: hist_cat, feature_encoder: null},
+            {name: hist_subcat1, feature_encoder: null},
+            {name: hist_sentiment, feature_encoder: null},
+            {name: hist_type, feature_encoder: null},
+            {name: hist_id_img, feature_encoder: "nn.Linear(64, 64, bias=False)"},
+            {name: hist_id_text, feature_encoder: ["nn.Linear(64, 64, bias=False)"]},
+            {name: article_id_img, feature_encoder: ["nn.Linear(64, 64, bias=False)"]},
+            {name: article_id_text, feature_encoder: ["nn.Linear(64, 64, bias=False)"]}
+        ]]
+    embedding_dim: 64
+    dnn_hidden_units: [[1024, 512, 256]]
+    attention_hidden_units: [[512, 256]]
+    attention_hidden_activations: ReLU
+    dnn_activations: ReLU
+    attention_output_activation: null
+    din_sequence_field: [[!!python/tuple [hist_id, hist_cat, hist_subcat1, hist_sentiment, hist_type], !!python/tuple [hist_id_img, hist_id_text]]]
+    din_target_field: [[!!python/tuple [article_id, category, subcat1, sentiment_label, article_type], !!python/tuple [article_id_img, article_id_text]]]
+    din_use_softmax: False
+    embedding_regularizer: 1.e-4
+    attention_dropout: 0.2
+    net_dropout: 0.1
+    batch_norm: False
+    learning_rate: 1.e-3
+    batch_size: 8192
+    seed: 20242025
+    group_id: impression_id
+    metrics: [[avgAUC, MRR, NDCG(k=5)]]
+    monitor: avgAUC
