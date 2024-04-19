@@ -1,4 +1,4 @@
-fuxictr==2.2.2
+fuxictr==2.2.3
 keras_preprocessing
 PyYAML
 pandas
@@ -6,3 +6,5 @@ scikit-learn
 numpy
 h5py
 tqdm
+pyarrow
+polars

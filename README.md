@@ -52,7 +52,7 @@ Note that the dataset is quite large. Preparing the full dataset needs about 1T 
 Please set up the environment as follows. We run the experiments on a P100 GPU server with 16G GPU memory and 750G RAM.
 
 + torch==1.10.2+cu113
-+ fuxictr==2.2.2
++ fuxictr==2.2.3
 
 ```
 conda create -n fuxictr python==3.9
